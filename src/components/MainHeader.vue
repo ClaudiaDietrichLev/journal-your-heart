@@ -17,6 +17,7 @@ header {
 h1 {
   margin: 0;
   text-align: center;
-  color: var(--color-white);
+  color: var(--color-bg-active);
+  text-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 }
 </style>
