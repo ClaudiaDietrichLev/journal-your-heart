@@ -43,7 +43,7 @@ body {
   --color-accent: #fa594e;
   --color-bg: #e5c5b6;
   --color-text: #2a252c;
-  --color-accent-active: #f47d78;
+  --color-accent-active: #f73029;
   --color-bg-active: #f9eae3;
   --color-white: white;
 
