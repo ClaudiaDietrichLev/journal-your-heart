@@ -9,20 +9,25 @@
         </tr>
       </thead>
       <tr v-for="session of selectedSessions" :key="session.session">
-        <td class="session-title">
-          {{ session.title }}
+        <td class="session-td-title">
+          <p class="session-title">{{ session.title }}</p>
+          <p class="number-of-prompts">
+            there are {{ session.numberOf }} prompts available
+          </p>
         </td>
         <td class="session-count">
           <input
             class="count-of-session"
             type="number"
+            min="0"
+            :max="session.numberOf"
             v-model="session.count"
           />
         </td>
       </tr>
     </table>
     <pre>{{ this.selectedSessions }}</pre>
-    <p>The session has now {{ countPrompts }} prompts</p>
+    <p class="result">your session has now {{ countPrompts }} prompts</p>
     <MainButton buttonTitle="Create Session" />
   </main>
 </template>
@@ -81,19 +86,21 @@ export default {
       const response = await fetch(this.ApiURL + "/sessionType/");
       this.sessionTypes = await response.json();
     },
+    async getPromptsForSessionTypes() {
+      const response = await fetch(this.ApiURL + "/sessionType/");
+      this.sessionTypes = await response.json();
+    },
     fillSessionList(sessionTypes) {
       this.selectedSessions = [];
       for (let sessionType of sessionTypes) {
         const session = {
           session: sessionType.id,
-          title: sessionType.sessionTitle,
+          title: sessionType.title,
+          numberOf: sessionType.prompts.length,
           count: 0,
         };
         this.selectedSessions.push(session);
       }
-      // for (i = 0, i < sessionTypes.length)
-      //    selectedSessions[i].session = sessionTypes[i].id
-      //  }
     },
   },
 };
@@ -105,6 +112,7 @@ main {
   flex-direction: column;
   margin: auto;
   padding: 2em;
+  justify-content: center;
 }
 table {
   width: 100%;
@@ -117,10 +125,25 @@ td {
 .count-of-session {
   width: 3em;
 }
-.session-title {
+.session-td-title {
+  padding-right: 0.5em;
 }
 
 .session-count {
   width: 25px;
+}
+
+.session-title {
+  font-weight: 600;
+}
+
+.number-of-prompts {
+  text-align: right;
+  font-size: 0.75em;
+  color: var(--color-accent);
+}
+
+.result {
+  align-self: center;
 }
 </style>
