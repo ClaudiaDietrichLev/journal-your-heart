@@ -1,7 +1,5 @@
 <template>
-  <div>
-    <button>{{ buttonTitle }}</button>
-  </div>
+  <button>{{ buttonTitle }}</button>
 </template>
 <script>
 export default {
@@ -23,6 +21,7 @@ button {
   padding: 0.5em;
   color: var(--color-bg-active);
   box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  text-align: center;
 }
 
 button:hover {
