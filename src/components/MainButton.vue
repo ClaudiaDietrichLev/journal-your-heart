@@ -28,4 +28,9 @@ button:hover {
   background-color: var(--color-accent-active);
   border: 2px solid var(--color-bg);
 }
+
+button:disabled {
+  background-color: var(--color-bg);
+  color: var(--color-bg-active);
+}
 </style>

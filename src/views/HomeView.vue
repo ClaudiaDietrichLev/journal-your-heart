@@ -1,21 +1,14 @@
 <template>
   <MainHeader />
   <main>
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tr v-for="session of selectedSessions" :key="session.session">
-        <td class="session-td-title">
-          <p class="session-title">{{ session.title }}</p>
-          <p class="number-of-prompts">
-            there are {{ session.numberOf }} prompts available
-          </p>
-        </td>
-        <td class="session-count">
+    <ul
+      class="session-list"
+      v-for="session of selectedSessions"
+      :key="session.session"
+    >
+      <li class="session-li-title">
+        <p class="session-title">{{ session.title }}</p>
+        <p class="session-count">
           <input
             class="count-of-session"
             type="number"
@@ -23,9 +16,13 @@
             :max="session.numberOf"
             v-model="session.count"
           />
-        </td>
-      </tr>
-    </table>
+        </p>
+        <p class="number-of-prompts">
+          there are {{ session.numberOf }} prompts available
+        </p>
+      </li>
+    </ul>
+
     <pre>{{ this.selectedSessions }}</pre>
     <p class="result">your session has now {{ countPrompts }} prompts</p>
     <MainButton buttonTitle="Create Session" />
@@ -63,8 +60,10 @@ export default {
     };
   },
   async created() {
-    await this.getSessionTypes();
-    this.fillSessionList(this.sessionTypes);
+    this.$store.dispatch(this.$store.getAllSessions());
+    console.log(this.$store.state);
+    //await this.getSessionTypes();
+    //this.fillSessionList(this.sessionTypes);
   },
   components: {
     MainHeader,
@@ -77,6 +76,7 @@ export default {
       for (let i of this.selectedSessions) {
         sum += i.count;
       }
+
       return sum;
     },
   },
@@ -113,13 +113,12 @@ main {
   margin: auto;
   padding: 2em;
   justify-content: center;
+  background-color: var(--color-bg);
 }
-table {
+.session-list {
   width: 100%;
-}
-td {
-  border-bottom: 2px solid var(--color-text);
-  padding-block: 0.5em;
+  background-color: var(--color-white);
+  border: 2px solid var(--color-text);
 }
 
 .count-of-session {
