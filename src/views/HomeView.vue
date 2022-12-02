@@ -1,31 +1,32 @@
 <template>
   <MainHeader />
   <main>
-    <ul
-      class="session-list"
-      v-for="session of selectedSessions"
-      :key="session.session"
-    >
-      <li class="session-li-title">
-        <p class="session-title">{{ session.title }}</p>
-        <p class="session-count">
-          <input
-            class="count-of-session"
-            type="number"
-            min="0"
-            :max="session.numberOf"
-            v-model="session.count"
-          />
-        </p>
+    <ul class="session-list">
+      <li
+        v-for="session of selectedSessions"
+        :key="session.session"
+        class="session-li-title"
+      >
+        <div class="session-desc">
+          <p class="session-title">{{ session.title }}</p>
+          <p class="session-count">
+            <input
+              class="count-of-session"
+              type="number"
+              min="0"
+              :max="session.numberOf"
+              v-model="session.count"
+            />
+          </p>
+        </div>
         <p class="number-of-prompts">
           there are {{ session.numberOf }} prompts available
         </p>
       </li>
     </ul>
 
-    <pre>{{ sessionTypes }}</pre>
     <p class="result">your session has now {{ countPrompts }} prompts</p>
-    <MainButton buttonTitle="Create Session" />
+    <MainButton :disabled="isNoPromptsSelected" buttonTitle="Create Session" />
   </main>
 </template>
 
@@ -60,8 +61,11 @@ export default {
       for (let i of this.selectedSessions) {
         sum += i.count;
       }
-
       return sum;
+    },
+
+    isNoPromptsSelected() {
+      return this.countPrompts === 0;
     },
 
     ...mapState(["sessionTypes", "prompts", "newSession"]),
@@ -98,32 +102,43 @@ main {
 }
 .session-list {
   width: 100%;
-  background-color: var(--color-white);
-  border: 2px solid var(--color-text);
+  padding: 0;
 }
 
 .count-of-session {
   width: 3em;
 }
-.session-td-title {
-  padding-right: 0.5em;
+.session-li-title {
+  list-style: none;
+  width: 100%;
+  background-color: var(--color-white);
+  border: 2px solid var(--color-text);
+  margin-block-start: 1em;
 }
 
 .session-count {
   width: 25px;
+  padding-right: 3.5em;
 }
 
 .session-title {
   font-weight: 600;
+  padding-left: 0.5em;
 }
 
 .number-of-prompts {
   text-align: right;
   font-size: 0.75em;
   color: var(--color-accent);
+  padding-right: 0.5em;
 }
 
 .result {
   align-self: center;
+}
+
+.session-desc {
+  display: flex;
+  justify-content: space-between;
 }
 </style>

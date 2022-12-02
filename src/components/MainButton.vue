@@ -30,7 +30,7 @@ button:hover {
 }
 
 button:disabled {
-  background-color: var(--color-bg);
-  color: var(--color-bg-active);
+  background-color: var(--color-bg-active);
+  color: var(--color-bg);
 }
 </style>
