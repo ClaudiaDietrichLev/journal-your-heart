@@ -3,6 +3,8 @@ import { createStore } from "vuex";
 import App from "./App.vue";
 import router from "./router";
 
+const ApiURL = "http://localhost:4730";
+
 // Create a new store instance.
 const store = createStore({
   state() {
@@ -11,12 +13,13 @@ const store = createStore({
         {
           sessionID: Number,
           sessionTitle: String,
-          prompts: [
-            {
-              question: String,
-              lastUsed: null,
-            },
-          ],
+        },
+      ],
+      prompts: [
+        {
+          promptID: Number,
+          prompt: String,
+          session: Number,
         },
       ],
       newSession: {
@@ -24,33 +27,41 @@ const store = createStore({
         actualDate: Date,
         type: Number,
         done: Boolean,
-        sessionType: [
+
+        prompts: [
           {
-            sessionID: Number,
-            sessionTitle: String,
-            prompts: [
-              {
-                question: String,
-                answered: Boolean,
-              },
-            ],
+            promptID: Number,
+            question: String,
+            answered: Boolean,
           },
         ],
       },
-      ApiUrl: "http://localhost:4730",
     };
   },
   mutations: {
-    increment(state) {
-      console.log(state);
+    getSessionTypes(state, result) {
+      state.sessionTypes = result;
+    },
+    getPrompts(state, result) {
+      state.prompts = result;
     },
   },
   actions: {
-    async getAllSessions() {
-      const response = await fetch(this.ApiURL + "/sessionType/");
-
+    async getAllSessionsTypes(state) {
+      const response = await fetch(ApiURL + "/sessionType/");
+      const result = await response.json();
+      state.commit("getSessionTypes", result);
+    },
+    async getAllPrompts(state) {
+      const response = await fetch(ApiURL + "/journaling-prompts/");
       const result = await response.json();
       console.log(result);
+      state.commit("getPrompts", result);
+    },
+  },
+  getters: {
+    getNumberofPrompts: (state) => (id) => {
+      return state.prompts.filter((prompt) => prompt.sessionType === id).length;
     },
   },
 });

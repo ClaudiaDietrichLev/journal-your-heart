@@ -23,7 +23,7 @@
       </li>
     </ul>
 
-    <pre>{{ this.selectedSessions }}</pre>
+    <pre>{{ sessionTypes }}</pre>
     <p class="result">your session has now {{ countPrompts }} prompts</p>
     <MainButton buttonTitle="Create Session" />
   </main>
@@ -33,37 +33,21 @@
 // @ is an alias to /src
 import MainHeader from "@/components/MainHeader.vue";
 import MainButton from "@/components/MainButton.vue";
+import { mapActions } from "vuex";
+import { mapState } from "vuex";
 
 export default {
   name: "HomeView",
+
   data() {
     return {
-      ApiURL: "http://localhost:4730",
-      sessionTypes: [
-        {
-          id: 1,
-          sessionTitle: "Reflexion am Morgen",
-          session: "morning",
-        },
-        {
-          id: 3,
-          sessionTitle: "Reflexion der Woche",
-          session: "week-reflection",
-        },
-        {
-          id: 2,
-          sessionTitle: "Reflexion am Abend",
-          session: "evening",
-        },
-      ],
       selectedSessions: [],
     };
   },
   async created() {
-    this.$store.dispatch(this.$store.getAllSessions());
-    console.log(this.$store.state);
-    //await this.getSessionTypes();
-    //this.fillSessionList(this.sessionTypes);
+    await this.$store.dispatch("getAllSessionsTypes");
+    await this.$store.dispatch("getAllPrompts");
+    this.fillSessionList(this.sessionTypes);
   },
   components: {
     MainHeader,
@@ -79,24 +63,21 @@ export default {
 
       return sum;
     },
+
+    ...mapState(["sessionTypes", "prompts", "newSession"]),
   },
 
   methods: {
-    async getSessionTypes() {
-      const response = await fetch(this.ApiURL + "/sessionType/");
-      this.sessionTypes = await response.json();
-    },
-    async getPromptsForSessionTypes() {
-      const response = await fetch(this.ApiURL + "/sessionType/");
-      this.sessionTypes = await response.json();
-    },
+    ...mapActions(["getAllSessionsType"]),
+
     fillSessionList(sessionTypes) {
       this.selectedSessions = [];
+
       for (let sessionType of sessionTypes) {
         const session = {
           session: sessionType.id,
           title: sessionType.title,
-          numberOf: sessionType.prompts.length,
+          numberOf: this.$store.getters.getNumberofPrompts(sessionType.id),
           count: 0,
         };
         this.selectedSessions.push(session);
