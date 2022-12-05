@@ -1,41 +1,24 @@
 <template>
   <MainHeader />
   <main>
-    <ul class="session-list">
-      <li
-        v-for="session of sessionList"
-        :key="session.session"
-        class="session-li-title"
-      >
+    <h2>this are the prompts for your session</h2>
+    <ul class="prompt-list">
+      <li v-for="prompt of prompts" :key="prompt.id" class="prompt-li">
         <div class="session-desc">
-          <p class="session-title">{{ session.title }}</p>
-          <p class="session-count">
-            <input
-              class="count-of-session"
-              type="number"
-              min="0"
-              :max="session.numberOf"
-              v-model="session.count"
-            />
-          </p>
+          <p class="session-title">{{ prompt.question }}</p>
         </div>
-        <p class="number-of-prompts">
-          there are {{ session.numberOf }} prompts available
-        </p>
       </li>
     </ul>
-    <pre>{{ sessionTypes }}</pre>
-    <p class="result">your session has now {{ countPrompts }} prompts</p>
+    <pre>{{ prompts }}</pre>
+
     <MainButton
       @click="$router.push({ name: 'sessionprompts' })"
-      :disabled="isNoPromptsSelected"
       buttonTitle="Create Session"
     />
   </main>
 </template>
 
 <script>
-// @ is an alias to /src
 import MainHeader from "@/components/MainHeader.vue";
 import MainButton from "@/components/MainButton.vue";
 import { mapActions } from "vuex";
@@ -43,11 +26,10 @@ import { mapState } from "vuex";
 import randomInt from "random-int";
 
 export default {
-  name: "HomeView",
+  name: "SessionPrompts",
 
   data() {
     return {
-      sessionList: [],
       prompts: [
         {
           session: Number,
@@ -57,11 +39,9 @@ export default {
       ],
     };
   },
-  async created() {
-    await this.$store.dispatch("getDataFromApi");
-    this.fillSessionList(this.sessionTypes, this.sessionList);
+  created() {
+    this.selectPrompts(this.selectedSessions);
   },
-
   components: {
     MainHeader,
     MainButton,
@@ -69,43 +49,26 @@ export default {
 
   computed: {
     ...mapState(["sessionTypes", "newSession", "selectedSessions"]),
-    countPrompts() {
-      let sum = 0;
-      for (let i of this.selectedSessions) {
-        sum += i.count;
-      }
-      return sum;
-    },
-
-    isNoPromptsSelected() {
-      return this.countPrompts === 0;
-    },
   },
 
   methods: {
     ...mapActions(["getAllSessionsType"]),
 
-    sessionWithCountOfPrompts(session) {
-      return session.filter((count) => count.count > 0);
-    },
+    fillSessionList(sessionTypes) {
+      this.selectedSessions = [];
 
-    fillSessionList(sessions, sessionList) {
-      sessionList = [];
-
-      for (let sessionType of sessions) {
-        console.log(sessionType);
+      for (let sessionType of sessionTypes) {
         const session = {
           session: sessionType.id,
           title: sessionType.title,
           numberOf: sessionType.prompts.length,
           count: 0,
         };
-        console.log(session);
-        sessionList.push(session);
-        console.log(sessionList);
+        this.selectedSessions.push(session);
       }
-      this.sessionList = sessionList;
-      this.$store.commit("fillSessionList", sessionList);
+    },
+    sessionWithCountOfPrompts(session) {
+      return session.filter((count) => count.count > 0);
     },
 
     selectPrompts(selectedSessions) {
@@ -113,17 +76,20 @@ export default {
       this.prompts = [];
       let max = 0;
       let count = 0;
+      let i = 0;
 
       for (let singleSession of promptSession) {
         max = singleSession.numberOf;
         count = singleSession.count;
-        this.getRandomPrompts(singleSession.session, count, max);
+        this.getRandomPrompts(singleSession.session, count, max, i);
       }
     },
-    getRandomPrompts(session, count, max) {
+    getRandomPrompts(session, count, max, id) {
       for (let i = 0; i < count; i++) {
+        id++;
         let randomNumber = randomInt(0, max);
         let promptObject = {};
+        promptObject.id = id;
         promptObject.session = session;
         promptObject.answered = false;
         let indexSession = this.sessionTypes.findIndex(
@@ -140,27 +106,28 @@ export default {
 
 <style scoped>
 main {
-  display: flex;
-  flex-direction: column;
   margin: auto;
   padding: 2em;
   justify-content: center;
   background-color: var(--color-bg);
 }
-.session-list {
-  width: 100%;
+.prompt-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   padding: 0;
+  column-gap: 1em;
 }
 
 .count-of-session {
   width: 3em;
 }
-.session-li-title {
+.prompt-li {
   list-style: none;
   width: 100%;
   background-color: var(--color-white);
   border: 2px solid var(--color-text);
   margin-block-start: 1em;
+  border-radius: 5px;
 }
 
 .session-count {

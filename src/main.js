@@ -11,26 +11,20 @@ const store = createStore({
     return {
       sessionTypes: [
         {
-          sessionID: Number,
-          sessionTitle: String,
+          id: Number,
+          title: String,
+          prompts: [{ question: String }],
         },
       ],
-      prompts: [
-        {
-          promptID: Number,
-          prompt: String,
-          session: Number,
-        },
-      ],
+      selectedSessions: [],
+
       newSession: {
         ID: Number,
         actualDate: Date,
-        type: Number,
         done: Boolean,
-
         prompts: [
           {
-            promptID: Number,
+            session: Number,
             question: String,
             answered: Boolean,
           },
@@ -42,26 +36,16 @@ const store = createStore({
     getSessionTypes(state, result) {
       state.sessionTypes = result;
     },
-    getPrompts(state, result) {
-      state.prompts = result;
+    fillSessionList(state, result) {
+      state.selectedSessions = result;
     },
   },
   actions: {
-    async getAllSessionsTypes(state) {
+    async getDataFromApi(state) {
       const response = await fetch(ApiURL + "/sessionType/");
       const result = await response.json();
+
       state.commit("getSessionTypes", result);
-    },
-    async getAllPrompts(state) {
-      const response = await fetch(ApiURL + "/journaling-prompts/");
-      const result = await response.json();
-      console.log(result);
-      state.commit("getPrompts", result);
-    },
-  },
-  getters: {
-    getNumberofPrompts: (state) => (id) => {
-      return state.prompts.filter((prompt) => prompt.sessionType === id).length;
     },
   },
 });
