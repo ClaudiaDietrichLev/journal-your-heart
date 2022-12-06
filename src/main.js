@@ -13,10 +13,18 @@ const store = createStore({
         {
           id: Number,
           title: String,
-          prompts: [{ question: String }],
+          numberOf: Number,
         },
       ],
-      selectedSessions: [],
+      prompts: [
+        {
+          id: Number,
+          session: Number,
+          prompt: String,
+        },
+      ],
+
+      selectSessionTypes: [],
 
       newSession: {
         ID: Number,
@@ -36,16 +44,33 @@ const store = createStore({
     getSessionTypes(state, result) {
       state.sessionTypes = result;
     },
-    fillSessionList(state, result) {
-      state.selectedSessions = result;
+
+    getPrompts(state, result) {
+      state.prompts = result;
+    },
+
+    fillSelectSessionTypes(state, result) {
+      state.selectSessionTypes = result;
     },
   },
   actions: {
-    async getDataFromApi(state) {
+    async getSessionTypesFromApi(state) {
       const response = await fetch(ApiURL + "/sessionType/");
       const result = await response.json();
 
       state.commit("getSessionTypes", result);
+    },
+
+    async getPromptsFromApi(state) {
+      const response = await fetch(ApiURL + "/prompts/");
+      const result = await response.json();
+
+      state.commit("getPrompts", result);
+    },
+  },
+  getters: {
+    sessionTypes() {
+      return this.state.sessionTypes;
     },
   },
 });

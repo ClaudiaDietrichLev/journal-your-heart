@@ -1,37 +1,39 @@
 <template>
-  <MainHeader />
-  <main>
-    <ul class="session-list">
-      <li
-        v-for="session of sessionList"
-        :key="session.session"
-        class="session-li-title"
-      >
-        <div class="session-desc">
-          <p class="session-title">{{ session.title }}</p>
-          <p class="session-count">
-            <input
-              class="count-of-session"
-              type="number"
-              min="0"
-              :max="session.numberOf"
-              v-model="session.count"
-            />
+  <div class="mainpage">
+    <MainHeader />
+    <main>
+      <ul class="session-list">
+        <li
+          v-for="session of selectSessionTypes"
+          :key="session.id"
+          class="session-li-title"
+        >
+          <div class="session-desc">
+            <p class="session-title">{{ session.title }}</p>
+            <p class="session-count">
+              <input
+                class="count-of-session"
+                type="number"
+                min="0"
+                :max="session.numberOf"
+                v-model="session.count"
+              />
+            </p>
+          </div>
+          <p class="number-of-prompts">
+            there are {{ session.numberOf }} prompts available
           </p>
-        </div>
-        <p class="number-of-prompts">
-          there are {{ session.numberOf }} prompts available
-        </p>
-      </li>
-    </ul>
-    <pre>{{ sessionTypes }}</pre>
-    <p class="result">your session has now {{ countPrompts }} prompts</p>
-    <MainButton
-      @click="$router.push({ name: 'sessionprompts' })"
-      :disabled="isNoPromptsSelected"
-      buttonTitle="Create Session"
-    />
-  </main>
+        </li>
+      </ul>
+      <pre>{{ sessionTypes }}</pre>
+      <p class="result">your session has now {{ countPrompts }} prompts</p>
+      <MainButton
+        @click="createSession(selectSessionTypes)"
+        :disabled="isNoPromptsSelected"
+        buttonTitle="Create Session"
+      />
+    </main>
+  </div>
 </template>
 
 <script>
@@ -40,26 +42,26 @@ import MainHeader from "@/components/MainHeader.vue";
 import MainButton from "@/components/MainButton.vue";
 import { mapActions } from "vuex";
 import { mapState } from "vuex";
-import randomInt from "random-int";
 
 export default {
   name: "HomeView",
 
   data() {
     return {
-      sessionList: [],
+      selectSessionTypes: [],
       prompts: [
         {
           session: Number,
-          question: String,
+          prompt: String,
           answered: Boolean,
         },
       ],
     };
   },
   async created() {
-    await this.$store.dispatch("getDataFromApi");
-    this.fillSessionList(this.sessionTypes, this.sessionList);
+    await this.$store.dispatch("getSessionTypesFromApi");
+    this.fillSelectSessionTypes();
+    //this.fillSessionList(this.sessionTypes, this.sessionList);
   },
 
   components: {
@@ -71,7 +73,7 @@ export default {
     ...mapState(["sessionTypes", "newSession", "selectedSessions"]),
     countPrompts() {
       let sum = 0;
-      for (let i of this.selectedSessions) {
+      for (let i of this.selectSessionTypes) {
         sum += i.count;
       }
       return sum;
@@ -83,56 +85,24 @@ export default {
   },
 
   methods: {
-    ...mapActions(["getAllSessionsType"]),
+    ...mapActions(["getSessionsTypesFromApi"]),
 
-    sessionWithCountOfPrompts(session) {
-      return session.filter((count) => count.count > 0);
-    },
-
-    fillSessionList(sessions, sessionList) {
-      sessionList = [];
-
-      for (let sessionType of sessions) {
-        console.log(sessionType);
-        const session = {
-          session: sessionType.id,
-          title: sessionType.title,
-          numberOf: sessionType.prompts.length,
+    fillSelectSessionTypes() {
+      this.selectSessionTypes = [];
+      for (let session of this.sessionTypes) {
+        const sessiontype = {
+          id: session.id,
+          title: session.title,
+          numberOf: session.numberOf,
           count: 0,
         };
-        console.log(session);
-        sessionList.push(session);
-        console.log(sessionList);
-      }
-      this.sessionList = sessionList;
-      this.$store.commit("fillSessionList", sessionList);
-    },
-
-    selectPrompts(selectedSessions) {
-      let promptSession = this.sessionWithCountOfPrompts(selectedSessions);
-      this.prompts = [];
-      let max = 0;
-      let count = 0;
-
-      for (let singleSession of promptSession) {
-        max = singleSession.numberOf;
-        count = singleSession.count;
-        this.getRandomPrompts(singleSession.session, count, max);
+        this.selectSessionTypes.push(sessiontype);
       }
     },
-    getRandomPrompts(session, count, max) {
-      for (let i = 0; i < count; i++) {
-        let randomNumber = randomInt(0, max);
-        let promptObject = {};
-        promptObject.session = session;
-        promptObject.answered = false;
-        let indexSession = this.sessionTypes.findIndex(
-          (element) => (element.id = session)
-        );
-        promptObject.question =
-          this.sessionTypes[indexSession].prompts[randomNumber].question;
-        this.prompts.push(promptObject);
-      }
+
+    createSession(selectSessionTypes) {
+      this.$store.commit("fillSelectSessionTypes", selectSessionTypes);
+      this.$router.push({ name: "sessionprompts" });
     },
   },
 };
@@ -146,6 +116,10 @@ main {
   padding: 2em;
   justify-content: center;
   background-color: var(--color-bg);
+}
+
+.mainpage {
+  margin: auto;
 }
 .session-list {
   width: 100%;
