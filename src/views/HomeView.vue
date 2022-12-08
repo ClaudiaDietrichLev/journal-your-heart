@@ -61,7 +61,6 @@ export default {
   async created() {
     await this.$store.dispatch("getSessionTypesFromApi");
     this.fillSelectSessionTypes();
-    //this.fillSessionList(this.sessionTypes, this.sessionList);
   },
 
   components: {
@@ -71,6 +70,7 @@ export default {
 
   computed: {
     ...mapState(["sessionTypes", "newSession", "selectedSessions"]),
+    // count all how many prompts are selected.
     countPrompts() {
       let sum = 0;
       for (let i of this.selectSessionTypes) {
@@ -86,7 +86,8 @@ export default {
 
   methods: {
     ...mapActions(["getSessionsTypesFromApi"]),
-
+    // fill the SelectSessionTypes-Array so that I can access all sessionTypes
+    // and count the selected ones
     fillSelectSessionTypes() {
       this.selectSessionTypes = [];
       for (let session of this.sessionTypes) {
@@ -99,7 +100,7 @@ export default {
         this.selectSessionTypes.push(sessiontype);
       }
     },
-
+    // send selectSessionTypes to store and go to sessionprompts route
     createSession(selectSessionTypes) {
       this.$store.commit("fillSelectSessionTypes", selectSessionTypes);
       this.$router.push({ name: "sessionprompts" });

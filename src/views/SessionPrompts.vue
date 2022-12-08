@@ -7,11 +7,16 @@
         v-for="prompt of newSessionPrompts"
         :key="prompt.id"
         class="prompt-li"
+        ref="prompt"
       >
         <div>
-          <p class="prompt">{{ prompt.prompt }}</p>
+          <p class="prompt" ref="prompt">{{ prompt.prompt }}</p>
         </div>
-        <div class="x-button"><button class="small-button">x</button></div>
+        <div class="x-button">
+          <button @click.prevent="deletePrompt(prompt)" class="small-button">
+            x
+          </button>
+        </div>
         <div class="sessiontype">{{ prompt.title }}</div>
       </li>
     </ul>
@@ -36,6 +41,7 @@ export default {
     return {
       id: 0,
       newSessionPrompts: [],
+      usedPrompts: [],
     };
   },
   async created() {
@@ -59,12 +65,15 @@ export default {
   methods: {
     splitPromptsBySession(session, prompts) {
       let promptsBySession = [];
-      for (let prompt of prompts) {
+      let sessionTitle = session.title;
+
+      for (const [i, prompt] of prompts.entries()) {
         if (prompt.session === session.id) {
           let promptObject = {
             id: prompt.id,
             session: prompt.session,
-
+            promptindex: i,
+            title: sessionTitle,
             prompt: prompt.prompt,
             used: false,
           };
@@ -75,28 +84,52 @@ export default {
     },
 
     selectPrompts() {
+      this.usedPrompts = [];
       for (let sessionType of this.selectSessionTypes) {
         if (sessionType.count > 0) {
           let sessionPrompts = this.splitPromptsBySession(
             sessionType,
             this.prompts
           );
+          this.usedPrompts[sessionType.id] = {
+            session: sessionType.id,
+            prompts: [],
+          };
           console.log(sessionPrompts);
-          console.log(sessionType.count);
+          console.log(this.usedPrompts);
+
           do {
             this.getRandomPromptForSession(sessionType, sessionPrompts);
-          } while (sessionType.count > this.newSessionPrompts.length);
+          } while (
+            sessionType.count > this.usedPrompts[sessionType.id].prompts.length
+          );
         }
       }
     },
     // Funktioniert nicht.... warum? Wie kann ich das object im Array finden?
     getRandomPromptForSession(session, promptsPerSession) {
-      let randomNumber = randomInt(0, session.numberOf);
-      if (promptsPerSession[randomNumber].used === false) {
-        console.log(this.prompts.indexOf(promptsPerSession[randomNumber]));
+      let randomNumber = randomInt(0, session.numberOf - 1);
+
+      if (promptsPerSession[randomNumber].used !== true) {
+        this.usedPrompts[session.id].prompts.push(
+          promptsPerSession[randomNumber].id
+        );
+
         promptsPerSession[randomNumber].used = true;
         this.newSessionPrompts.push(promptsPerSession[randomNumber]);
       }
+    },
+
+    deletePrompt(prompt) {
+      console.log(prompt);
+      //delete prompt from array promptsPerSession & from usedPrompts
+
+      this.newSessionPrompts.splice(this.newSessionPrompts.indexOf(prompt), 1);
+      const usedId = this.usedPrompts[prompt.session].prompts.indexOf(
+        prompt.id
+      );
+
+      this.usedPrompts[prompt.session].prompts.splice(usedId, 1);
     },
   },
 };
