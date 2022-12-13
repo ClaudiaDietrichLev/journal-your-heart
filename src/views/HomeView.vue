@@ -1,91 +1,86 @@
 <template>
-  <MainHeader />
-  <main>
-    <ul class="session-list">
-      <li
-        v-for="session of selectedSessions"
-        :key="session.session"
-        class="session-li-title"
-      >
-        <div class="session-desc">
-          <p class="session-title">{{ session.title }}</p>
-          <p class="session-count">
-            <input
-              class="count-of-session"
-              type="number"
-              min="0"
-              :max="session.numberOf"
-              v-model="session.count"
-            />
+  <div class="mainpage">
+    <MainHeader />
+    <main>
+      <ul class="session-list">
+        <li
+          v-for="session of listSessiontypes"
+          :key="session.id"
+          class="session-li-title"
+        >
+          <div class="session-desc">
+            <p class="session-title">{{ session.title }}</p>
+            <p class="session-count">
+              <input
+                class="count-of-session"
+                type="number"
+                min="0"
+                :max="session.numberPrompts"
+                v-model="session.selected"
+              />
+            </p>
+          </div>
+          <p class="number-of-prompts">
+            there are {{ session.numberPrompts }} prompts available
           </p>
-        </div>
-        <p class="number-of-prompts">
-          there are {{ session.numberOf }} prompts available
-        </p>
-      </li>
-    </ul>
+        </li>
+      </ul>
 
-    <p class="result">your session has now {{ countPrompts }} prompts</p>
-    <MainButton :disabled="isNoPromptsSelected" buttonTitle="Create Session" />
-  </main>
+      <p class="result">
+        your session has now
+        {{ countSelectedPrompts }} prompts
+      </p>
+      <MainButton
+        @click="createSession(selectSessionTypes)"
+        :disabled="isNoPromptsSelected"
+        buttonTitle="Select Prompts"
+      />
+    </main>
+  </div>
 </template>
 
 <script>
 // @ is an alias to /src
 import MainHeader from "@/components/MainHeader.vue";
 import MainButton from "@/components/MainButton.vue";
-import { mapActions } from "vuex";
 import { mapState } from "vuex";
 
 export default {
   name: "HomeView",
 
   data() {
-    return {
-      selectedSessions: [],
-    };
+    return {};
   },
-  async created() {
-    await this.$store.dispatch("getAllSessionsTypes");
-    await this.$store.dispatch("getAllPrompts");
-    this.fillSessionList(this.sessionTypes);
+  created() {
+    this.$store.dispatch("fillListSessiontypes");
   },
+
   components: {
     MainHeader,
     MainButton,
   },
 
   computed: {
-    countPrompts() {
+    ...mapState(["sessiontypes", "listSessiontypes"]),
+    // count all how many prompts are selected.
+    countSelectedPrompts() {
       let sum = 0;
-      for (let i of this.selectedSessions) {
-        sum += i.count;
+      for (let n of this.listSessiontypes) {
+        sum += n.selected;
       }
       return sum;
     },
 
     isNoPromptsSelected() {
-      return this.countPrompts === 0;
+      return this.countSelectedPrompts === 0;
     },
-
-    ...mapState(["sessionTypes", "prompts", "newSession"]),
   },
 
   methods: {
-    ...mapActions(["getAllSessionsType"]),
-
-    fillSessionList(sessionTypes) {
-      this.selectedSessions = [];
-
-      for (let sessionType of sessionTypes) {
-        const session = {
-          session: sessionType.id,
-          title: sessionType.title,
-          numberOf: this.$store.getters.getNumberofPrompts(sessionType.id),
-          count: 0,
-        };
-        this.selectedSessions.push(session);
-      }
+    // send listSessiontypes to store and go to sessionprompts route
+    createSession() {
+      this.$store.commit("fillListSessiontypes", this.listSessiontypes);
+      this.$router.push({ name: "sessionprompts" });
     },
   },
 };
@@ -99,6 +94,10 @@ main {
   padding: 2em;
   justify-content: center;
   background-color: var(--color-bg);
+}
+
+.mainpage {
+  margin: auto;
 }
 .session-list {
   width: 100%;

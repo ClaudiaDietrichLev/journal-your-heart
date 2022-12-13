@@ -1,11 +1,17 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
+import SessionPrompts from "../views/SessionPrompts.vue";
 
 const routes = [
   {
     path: "/",
     name: "home",
     component: HomeView,
+  },
+  {
+    path: "/prompts/",
+    name: "sessionprompts",
+    component: SessionPrompts,
   },
   {
     path: "/about",

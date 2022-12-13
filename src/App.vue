@@ -39,6 +39,10 @@ body {
   width: 500px;
 }
 
+ {
+  margin: auto;
+}
+
 :root {
   --color-accent: #fa594e;
   --color-bg: #e5c5b6;
@@ -53,8 +57,10 @@ body {
   margin: 0;
 }
 
-h1 {
+h1,
+h3 {
   font-family: "Fredoka One", cursive;
+  text-align: center;
 }
 
 .visually-hidden {
