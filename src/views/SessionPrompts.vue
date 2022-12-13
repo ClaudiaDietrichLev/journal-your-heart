@@ -17,7 +17,7 @@
             x
           </button>
         </div>
-        <div class="sessiontype">{{ prompt.title }}</div>
+        <div class="sessiontype">{{ prompt.sessionTitle }}</div>
       </li>
     </ul>
 
@@ -42,10 +42,14 @@ export default {
       id: 0,
       newSessionPrompts: [],
       usedPrompts: [],
+      actualPrompts: [],
+      sessionIndex: Number,
+      indexActualPrompts: Number,
+      indexUsedPrompts: Number,
+      selectedSessionIndex: Number,
     };
   },
-  async created() {
-    await this.$store.dispatch("getPromptsFromApi");
+  created() {
     this.selectPrompts();
   },
   components: {
@@ -54,82 +58,113 @@ export default {
   },
 
   computed: {
-    ...mapState([
-      "sessionTypes",
-      "newSession",
-      "selectSessionTypes",
-      "prompts",
-    ]),
+    ...mapState(["sessiontypes", "sessions", "listSessiontypes"]),
   },
 
   methods: {
-    splitPromptsBySession(session, prompts) {
-      let promptsBySession = [];
-      let sessionTitle = session.title;
-
-      for (const [i, prompt] of prompts.entries()) {
-        if (prompt.session === session.id) {
-          let promptObject = {
-            id: prompt.id,
-            session: prompt.session,
-            promptindex: i,
-            title: sessionTitle,
-            prompt: prompt.prompt,
-            used: false,
-          };
-          promptsBySession.push(promptObject);
-        }
-      }
-      return promptsBySession;
-    },
-
     selectPrompts() {
       this.usedPrompts = [];
-      for (let sessionType of this.selectSessionTypes) {
-        if (sessionType.count > 0) {
-          let sessionPrompts = this.splitPromptsBySession(
-            sessionType,
-            this.prompts
+
+      for (let sessiontype of this.listSessiontypes) {
+        if (sessiontype.selected > 0) {
+          this.usedPrompts.push({
+            session: sessiontype.sessionId,
+            prompts: new Set(),
+          });
+          this.actualPrompts.push({
+            session: sessiontype.sessionId,
+            prompts: new Set(),
+          });
+
+          this.sessionIndex = this.usedPrompts.findIndex(
+            (session) => session.session === sessiontype.sessionId
           );
-          this.usedPrompts[sessionType.id] = {
-            session: sessionType.id,
-            prompts: [],
-          };
-          console.log(sessionPrompts);
-          console.log(this.usedPrompts);
+
+          this.indexActualPrompts = this.actualPrompts.findIndex(
+            (session) => session.session === sessiontype.sessionId
+          );
+
+          const promptsSession = this.sessiontypes.find(
+            (session) => session.id === sessiontype.sessionId
+          ).prompts;
 
           do {
-            this.getRandomPromptForSession(sessionType, sessionPrompts);
+            this.getRandomPromptForSession(sessiontype);
           } while (
-            sessionType.count > this.usedPrompts[sessionType.id].prompts.length
+            sessiontype.selected >
+            this.actualPrompts[this.indexActualPrompts].prompts.size
           );
+          this.fillPromptsList(sessiontype, promptsSession);
         }
       }
     },
-    // Funktioniert nicht.... warum? Wie kann ich das object im Array finden?
-    getRandomPromptForSession(session, promptsPerSession) {
-      let randomNumber = randomInt(0, session.numberOf - 1);
 
-      if (promptsPerSession[randomNumber].used !== true) {
-        this.usedPrompts[session.id].prompts.push(
-          promptsPerSession[randomNumber].id
+    fillPromptsList(session, promptsSession) {
+      this.newSessionPrompts = [];
+      for (let actualPrompt of this.actualPrompts[
+        this.indexActualPrompts
+      ].prompts.entries()) {
+        const actualIndex = promptsSession.findIndex(
+          (prompt) => prompt.id === actualPrompt[0]
         );
 
-        promptsPerSession[randomNumber].used = true;
-        this.newSessionPrompts.push(promptsPerSession[randomNumber]);
+        const sessionPrompt = {
+          id: session.sessionId + "-" + promptsSession[actualIndex].id,
+          sessionId: session.sessionId,
+          sessionTitle: session.sessionTitle,
+          promptId: promptsSession[actualIndex].id,
+          prompt: promptsSession[actualIndex].prompt,
+        };
+        this.newSessionPrompts.push(sessionPrompt);
+      }
+    },
+
+    getRandomPromptForSession(session) {
+      const randomNumber = randomInt(0, session.numberPrompts - 1);
+
+      if (!this.usedPrompts[this.sessionIndex].prompts.has(randomNumber)) {
+        this.usedPrompts[this.sessionIndex].prompts.add(randomNumber);
+
+        this.actualPrompts[this.indexActualPrompts].prompts.add(randomNumber);
       }
     },
 
     deletePrompt(prompt) {
       console.log(prompt);
-      //delete prompt from array promptsPerSession & from usedPrompts
 
-      this.newSessionPrompts.splice(this.newSessionPrompts.indexOf(prompt), 1);
-      const usedId = this.usedPrompts[prompt.session].prompts.indexOf(
-        prompt.id
+      this.indexUsedPrompts = this.usedPrompts.findIndex(
+        (session) => session.session === prompt.sessionId
+      );
+      this.selectedSessionIndex = this.listSessiontypes.findIndex(
+        (session) => session.sessionId === prompt.sessionId
       );
 
-      this.usedPrompts[prompt.session].prompts.splice(usedId, 1);
+      if (
+        this.usedPrompts[this.indexUsedPrompts].prompts.size <
+        this.listSessiontypes[this.selectedSessionIndex].numberPrompts
+      ) {
+        this.indexActualPrompts = this.actualPrompts.findIndex(
+          (session) => session.session === prompt.sessionId
+        );
+        this.actualPrompts[this.indexActualPrompts].prompts.delete(
+          prompt.promptId
+        );
+        const promptsSession = this.sessiontypes.find(
+          (session) => session.id === prompt.sessionId
+        ).prompts;
+        do {
+          this.getRandomPromptForSession(
+            this.listSessiontypes[this.selectedSessionIndex]
+          );
+        } while (
+          this.listSessiontypes[this.selectedSessionIndex].selected >
+          this.actualPrompts[this.indexActualPrompts].prompts.size
+        );
+        this.fillPromptsList(
+          this.listSessiontypes[this.selectedSessionIndex],
+          promptsSession
+        );
+      }
     },
   },
 };

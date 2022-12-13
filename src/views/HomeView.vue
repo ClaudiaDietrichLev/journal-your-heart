@@ -4,7 +4,7 @@
     <main>
       <ul class="session-list">
         <li
-          v-for="session of selectSessionTypes"
+          v-for="session of listSessiontypes"
           :key="session.id"
           class="session-li-title"
         >
@@ -15,22 +15,25 @@
                 class="count-of-session"
                 type="number"
                 min="0"
-                :max="session.numberOf"
-                v-model="session.count"
+                :max="session.numberPrompts"
+                v-model="session.selected"
               />
             </p>
           </div>
           <p class="number-of-prompts">
-            there are {{ session.numberOf }} prompts available
+            there are {{ session.numberPrompts }} prompts available
           </p>
         </li>
       </ul>
-      <pre>{{ sessionTypes }}</pre>
-      <p class="result">your session has now {{ countPrompts }} prompts</p>
+
+      <p class="result">
+        your session has now
+        {{ countSelectedPrompts }} prompts
+      </p>
       <MainButton
         @click="createSession(selectSessionTypes)"
         :disabled="isNoPromptsSelected"
-        buttonTitle="Create Session"
+        buttonTitle="Select Prompts"
       />
     </main>
   </div>
@@ -40,27 +43,16 @@
 // @ is an alias to /src
 import MainHeader from "@/components/MainHeader.vue";
 import MainButton from "@/components/MainButton.vue";
-import { mapActions } from "vuex";
 import { mapState } from "vuex";
 
 export default {
   name: "HomeView",
 
   data() {
-    return {
-      selectSessionTypes: [],
-      prompts: [
-        {
-          session: Number,
-          prompt: String,
-          answered: Boolean,
-        },
-      ],
-    };
+    return {};
   },
-  async created() {
-    await this.$store.dispatch("getSessionTypesFromApi");
-    this.fillSelectSessionTypes();
+  created() {
+    this.$store.dispatch("fillListSessiontypes");
   },
 
   components: {
@@ -69,40 +61,25 @@ export default {
   },
 
   computed: {
-    ...mapState(["sessionTypes", "newSession", "selectedSessions"]),
+    ...mapState(["sessiontypes", "listSessiontypes"]),
     // count all how many prompts are selected.
-    countPrompts() {
+    countSelectedPrompts() {
       let sum = 0;
-      for (let i of this.selectSessionTypes) {
-        sum += i.count;
+      for (let n of this.listSessiontypes) {
+        sum += n.selected;
       }
       return sum;
     },
 
     isNoPromptsSelected() {
-      return this.countPrompts === 0;
+      return this.countSelectedPrompts === 0;
     },
   },
 
   methods: {
-    ...mapActions(["getSessionsTypesFromApi"]),
-    // fill the SelectSessionTypes-Array so that I can access all sessionTypes
-    // and count the selected ones
-    fillSelectSessionTypes() {
-      this.selectSessionTypes = [];
-      for (let session of this.sessionTypes) {
-        const sessiontype = {
-          id: session.id,
-          title: session.title,
-          numberOf: session.numberOf,
-          count: 0,
-        };
-        this.selectSessionTypes.push(sessiontype);
-      }
-    },
-    // send selectSessionTypes to store and go to sessionprompts route
-    createSession(selectSessionTypes) {
-      this.$store.commit("fillSelectSessionTypes", selectSessionTypes);
+    // send listSessiontypes to store and go to sessionprompts route
+    createSession() {
+      this.$store.commit("fillListSessiontypes", this.listSessiontypes);
       this.$router.push({ name: "sessionprompts" });
     },
   },
