@@ -1,31 +1,34 @@
 <template>
-  <MainHeader />
-  <main>
-    <h3>these are the prompts for your session</h3>
-    <ul class="prompt-list">
-      <li
-        v-for="prompt of newSessionPrompts"
-        :key="prompt.id"
-        class="prompt-li"
-        ref="prompt"
-      >
-        <div>
-          <p class="prompt" ref="prompt">{{ prompt.prompt }}</p>
-        </div>
-        <div class="x-button">
-          <button @click.prevent="deletePrompt(prompt)" class="small-button">
-            x
-          </button>
-        </div>
-        <div class="sessiontype">{{ prompt.sessionTitle }}</div>
-      </li>
-    </ul>
+  <div class="mainpage">
+    <MainHeader />
+    <main>
+      <h3>these are the prompts for your session</h3>
+      <ul class="prompt-list">
+        <li
+          v-for="prompt of promptList"
+          :key="prompt.id"
+          class="prompt-li"
+          ref="prompt"
+        >
+          <div>
+            {{ prompt }}
+            <p class="prompt" ref="prompt">{{ prompt.prompt }}</p>
+          </div>
 
-    <MainButton
-      @click="$router.push({ name: 'sessionprompts' })"
-      buttonTitle="Create Session"
-    />
-  </main>
+          <div class="x-button">
+            <button @click.prevent="deletePrompt(prompt)" class="small-button">
+              x
+            </button>
+          </div>
+          <div class="sessiontype">{{ prompt.title }}</div>
+        </li>
+      </ul>
+      <MainButton
+        @click="$router.push({ name: 'sessionprompts' })"
+        buttonTitle="Create Session"
+      />
+    </main>
+  </div>
 </template>
 
 <script>
@@ -39,18 +42,12 @@ export default {
 
   data() {
     return {
-      id: 0,
-      newSessionPrompts: [],
-      usedPrompts: [],
-      actualPrompts: [],
-      sessionIndex: Number,
-      indexActualPrompts: Number,
-      indexUsedPrompts: Number,
-      selectedSessionIndex: Number,
+      promptList: [],
+      isNoPrompt: false,
     };
   },
   created() {
-    this.selectPrompts();
+    this.preparePrompts();
   },
   components: {
     MainHeader,
@@ -58,113 +55,55 @@ export default {
   },
 
   computed: {
-    ...mapState(["sessiontypes", "sessions", "listSessiontypes"]),
+    ...mapState(["sessionTypes", "userSession"]),
+
+    isPrompt(prompt) {
+      console.log(prompt);
+
+      //  if (this.userSession[actualSession].prompts.length === 0) {
+      return true;
+      //     } else return false;
+    },
   },
 
   methods: {
-    selectPrompts() {
-      this.usedPrompts = [];
-
-      for (let sessiontype of this.listSessiontypes) {
-        if (sessiontype.selected > 0) {
-          this.usedPrompts.push({
-            session: sessiontype.sessionId,
-            prompts: new Set(),
+    preparePrompts() {
+      this.promptList = [];
+      this.userSession.forEach((session) => {
+        session.selectedPrompts.forEach((prompt) => {
+          this.promptList.push({
+            id: session.id + "-" + prompt.id,
+            sessionId: session.id,
+            title: session.title,
+            promptId: prompt.id,
+            prompt: prompt.prompt,
           });
-          this.actualPrompts.push({
-            session: sessiontype.sessionId,
-            prompts: new Set(),
-          });
-
-          this.sessionIndex = this.usedPrompts.findIndex(
-            (session) => session.session === sessiontype.sessionId
-          );
-
-          this.indexActualPrompts = this.actualPrompts.findIndex(
-            (session) => session.session === sessiontype.sessionId
-          );
-
-          const promptsSession = this.sessiontypes.find(
-            (session) => session.id === sessiontype.sessionId
-          ).prompts;
-
-          do {
-            this.getRandomPromptForSession(sessiontype);
-          } while (
-            sessiontype.selected >
-            this.actualPrompts[this.indexActualPrompts].prompts.size
-          );
-          this.fillPromptsList(sessiontype, promptsSession);
-        }
-      }
-    },
-
-    fillPromptsList(session, promptsSession) {
-      this.newSessionPrompts = [];
-      for (let actualPrompt of this.actualPrompts[
-        this.indexActualPrompts
-      ].prompts.entries()) {
-        const actualIndex = promptsSession.findIndex(
-          (prompt) => prompt.id === actualPrompt[0]
-        );
-
-        const sessionPrompt = {
-          id: session.sessionId + "-" + promptsSession[actualIndex].id,
-          sessionId: session.sessionId,
-          sessionTitle: session.sessionTitle,
-          promptId: promptsSession[actualIndex].id,
-          prompt: promptsSession[actualIndex].prompt,
-        };
-        this.newSessionPrompts.push(sessionPrompt);
-      }
-    },
-
-    getRandomPromptForSession(session) {
-      const randomNumber = randomInt(0, session.numberPrompts - 1);
-
-      if (!this.usedPrompts[this.sessionIndex].prompts.has(randomNumber)) {
-        this.usedPrompts[this.sessionIndex].prompts.add(randomNumber);
-
-        this.actualPrompts[this.indexActualPrompts].prompts.add(randomNumber);
-      }
+        });
+      });
     },
 
     deletePrompt(prompt) {
-      console.log(prompt);
-
-      this.indexUsedPrompts = this.usedPrompts.findIndex(
-        (session) => session.session === prompt.sessionId
-      );
-      this.selectedSessionIndex = this.listSessiontypes.findIndex(
-        (session) => session.sessionId === prompt.sessionId
+      const selectedSession = this.userSession.find(
+        (session) => session.id === prompt.sessionId
       );
 
-      if (
-        this.usedPrompts[this.indexUsedPrompts].prompts.size <
-        this.listSessiontypes[this.selectedSessionIndex].numberPrompts
-      ) {
-        this.indexActualPrompts = this.actualPrompts.findIndex(
-          (session) => session.session === prompt.sessionId
-        );
-        this.actualPrompts[this.indexActualPrompts].prompts.delete(
-          prompt.promptId
-        );
-        const promptsSession = this.sessiontypes.find(
-          (session) => session.id === prompt.sessionId
-        ).prompts;
-        do {
-          this.getRandomPromptForSession(
-            this.listSessiontypes[this.selectedSessionIndex]
-          );
-        } while (
-          this.listSessiontypes[this.selectedSessionIndex].selected >
-          this.actualPrompts[this.indexActualPrompts].prompts.size
-        );
-        this.fillPromptsList(
-          this.listSessiontypes[this.selectedSessionIndex],
-          promptsSession
-        );
-      }
+      const randomNumber = randomInt(0, selectedSession.prompts.length - 1);
+      const selectedPrompt = selectedSession.prompts[randomNumber];
+      const deletedPrompt = selectedSession.selectedPrompts.find(
+        (element) => element.id === prompt.promptId
+      );
+
+      selectedSession.selectedPrompts.splice(
+        selectedSession.prompts.indexOf(deletedPrompt),
+        1
+      );
+      selectedSession.selectedPrompts.push(selectedPrompt);
+      selectedSession.prompts.splice(
+        selectedSession.prompts.indexOf(selectedPrompt),
+        1
+      );
+
+      this.preparePrompts();
     },
   },
 };
@@ -178,6 +117,11 @@ main {
   padding: 2em;
   justify-content: center;
   background-color: var(--color-bg);
+}
+
+.mainpage {
+  margin: auto;
+  width: 500px;
 }
 .prompt-list {
   display: grid;
