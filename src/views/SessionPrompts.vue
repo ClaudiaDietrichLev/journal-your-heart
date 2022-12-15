@@ -11,7 +11,6 @@
           ref="prompt"
         >
           <div>
-            {{ prompt }}
             <p class="prompt" ref="prompt">{{ prompt.prompt }}</p>
           </div>
 
@@ -24,8 +23,8 @@
         </li>
       </ul>
       <MainButton
-        @click="$router.push({ name: 'sessionprompts' })"
-        buttonTitle="Create Session"
+        @click="saveSession(this.userSessions)"
+        buttonTitle="Save Session"
       />
     </main>
   </div>
@@ -55,21 +54,13 @@ export default {
   },
 
   computed: {
-    ...mapState(["sessionTypes", "userSession"]),
-
-    isPrompt(prompt) {
-      console.log(prompt);
-
-      //  if (this.userSession[actualSession].prompts.length === 0) {
-      return true;
-      //     } else return false;
-    },
+    ...mapState(["sessionTypes", "userSessions", "sessions"]),
   },
 
   methods: {
     preparePrompts() {
       this.promptList = [];
-      this.userSession.forEach((session) => {
+      this.userSessions.forEach((session) => {
         session.selectedPrompts.forEach((prompt) => {
           this.promptList.push({
             id: session.id + "-" + prompt.id,
@@ -83,7 +74,7 @@ export default {
     },
 
     deletePrompt(prompt) {
-      const selectedSession = this.userSession.find(
+      const selectedSession = this.userSessions.find(
         (session) => session.id === prompt.sessionId
       );
 
@@ -104,6 +95,28 @@ export default {
       );
 
       this.preparePrompts();
+    },
+
+    saveSession(userSessions) {
+      this.$store.commit("prepareSession", userSessions);
+
+      const session = {
+        // generate id
+        id: 1,
+        date: new Date(),
+        finished: false,
+        prompts: [],
+      };
+      for (let userSession of userSessions) {
+        userSession.selectedPrompts.forEach((selectedPrompt) => {
+          const prompt = {
+            sessionTitle: userSession.title,
+            prompt: selectedPrompt.prompt,
+          };
+          session.prompts.push(prompt);
+        });
+      }
+      this.$store.commit("saveSession", session);
     },
   },
 };

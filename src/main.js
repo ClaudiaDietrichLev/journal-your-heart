@@ -170,7 +170,7 @@ const store = createStore({
       // Fachlich: getroffene Auswahl des Users
       //
 
-      sessions: {},
+      sessions: Array,
       /*
       id: number,
       date: date,
@@ -189,7 +189,10 @@ const store = createStore({
       state.userSelection = result;
     },
     prepareSession(state, result) {
-      state.userSession = result;
+      state.userSessions = result;
+    },
+    saveSession(state, result) {
+      state.sessions = result;
     },
   },
   actions: {

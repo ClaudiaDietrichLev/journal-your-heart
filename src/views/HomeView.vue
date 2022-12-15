@@ -8,7 +8,6 @@
           :key="session.id"
           class="session-li-title"
         >
-          {{ session }}
           <div class="session-desc">
             <p class="session-title">{{ session.sessionTitle }}</p>
             <p class="session-count">
