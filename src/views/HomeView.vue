@@ -4,24 +4,25 @@
     <main>
       <ul class="session-list">
         <li
-          v-for="session of listSessiontypes"
+          v-for="session of userSelection"
           :key="session.id"
           class="session-li-title"
         >
+          {{ session }}
           <div class="session-desc">
-            <p class="session-title">{{ session.title }}</p>
+            <p class="session-title">{{ session.sessionTitle }}</p>
             <p class="session-count">
               <input
                 class="count-of-session"
                 type="number"
                 min="0"
-                :max="session.numberPrompts"
+                :max="session.countAllPrompt"
                 v-model="session.selected"
               />
             </p>
           </div>
           <p class="number-of-prompts">
-            there are {{ session.numberPrompts }} prompts available
+            there are {{ session.countAllPrompts }} prompts available
           </p>
         </li>
       </ul>
@@ -52,7 +53,7 @@ export default {
     return {};
   },
   created() {
-    this.$store.dispatch("fillListSessiontypes");
+    this.$store.dispatch("createUserSelection");
   },
 
   components: {
@@ -61,11 +62,12 @@ export default {
   },
 
   computed: {
-    ...mapState(["sessiontypes", "listSessiontypes"]),
+    ...mapState(["sessionTypes", "userSelection", "userSession"]),
+
     // count all how many prompts are selected.
     countSelectedPrompts() {
       let sum = 0;
-      for (let n of this.listSessiontypes) {
+      for (let n of this.userSelection) {
         sum += n.selected;
       }
       return sum;
@@ -79,7 +81,8 @@ export default {
   methods: {
     // send listSessiontypes to store and go to sessionprompts route
     createSession() {
-      this.$store.commit("fillListSessiontypes", this.listSessiontypes);
+      this.$store.dispatch("prepareSession");
+
       this.$router.push({ name: "sessionprompts" });
     },
   },
@@ -90,7 +93,7 @@ export default {
 main {
   display: flex;
   flex-direction: column;
-  margin: auto;
+
   padding: 2em;
   justify-content: center;
   background-color: var(--color-bg);
@@ -98,6 +101,7 @@ main {
 
 .mainpage {
   margin: auto;
+  width: 500px;
 }
 .session-list {
   width: 100%;

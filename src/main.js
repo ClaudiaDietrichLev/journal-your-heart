@@ -2,12 +2,14 @@ import { createApp } from "vue";
 import { createStore } from "vuex";
 import App from "./App.vue";
 import router from "./router";
+import randomInt from "random-int";
 
 // Create a new store instance.
 const store = createStore({
   state() {
     return {
-      sessiontypes: [
+      // sessionTypes
+      sessionTypes: [
         {
           id: 1,
           title: "start in the day",
@@ -159,13 +161,14 @@ const store = createStore({
         },
       ],
 
-      listSessiontypes: [],
-      /*
-      sessionId: number,
-      sessionTitle: string,
-      numberPrompts: number (count all prompts in prompt-array),
-      selected: number
-      */
+      userSelection: Array,
+
+      userSession: Array,
+
+      // auswahl: kategorie 1: 3 fragen, k2: 2 fragen, k3. 5 fragen
+
+      // Fachlich: getroffene Auswahl des Users
+      //
 
       sessions: {},
       /*
@@ -182,30 +185,57 @@ const store = createStore({
     };
   },
   mutations: {
-    getSessiontypes(state, result) {
-      state.sessiontypes = result;
+    createUserSelection(state, result) {
+      state.userSelection = result;
     },
-
-    fillListSessiontypes(state, result) {
-      state.listSessiontypes = result;
+    prepareSession(state, result) {
+      state.userSession = result;
     },
   },
   actions: {
-    fillListSessiontypes(state) {
-      let numberOfPrompts = [];
-      for (let sessiontype of this.state.sessiontypes) {
-        const sessionObject = {
-          sessionId: sessiontype.id,
-          sessionTitle: sessiontype.title,
-          numberPrompts: sessiontype.prompts.length,
+    //vorbereitung für die AuswahlSeite auf der User die Anzahl der Prompts wählen kann
+    createUserSelection(state) {
+      const userSelectionArray = [];
+      this.state.sessionTypes.forEach((sessionType) => {
+        userSelectionArray.push({
+          sessionId: sessionType.id,
+          sessionTitle: sessionType.title,
+          countAllPrompts: sessionType.prompts.length,
           selected: 0,
+        });
+      });
+
+      state.commit("createUserSelection", userSelectionArray);
+    },
+    //erste Prompts für die ausgewählten Sessions werden ausgewählt
+    prepareSession(state) {
+      const session = this.state.userSelection.map((selectedSessionType) => {
+        return {
+          id: selectedSessionType.sessionId,
+          title: selectedSessionType.sessionTitle,
+          count: selectedSessionType.selected,
+          prompts: this.state.sessionTypes.find((sessionType) => {
+            return sessionType.id === selectedSessionType.sessionId;
+          }).prompts,
+          selectedPrompts: [],
         };
-        numberOfPrompts.push(sessionObject);
-        state.commit("fillListSessiontypes", numberOfPrompts);
+      });
+
+      for (let sessionType of session) {
+        for (let i = 1; i <= sessionType.count; i++) {
+          const randomNumber = randomInt(0, sessionType.prompts.length - 1);
+          const selectedPrompt = sessionType.prompts[randomNumber];
+
+          sessionType.selectedPrompts.push(selectedPrompt);
+          sessionType.prompts.splice(
+            sessionType.prompts.indexOf(selectedPrompt),
+            1
+          );
+        }
       }
+      state.commit("prepareSession", session);
     },
   },
-  getters: {},
 });
 
 createApp(App).use(router).use(store).mount("#app");

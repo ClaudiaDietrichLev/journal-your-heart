@@ -36,11 +36,6 @@
 }
 body {
   margin: 0;
-  width: 500px;
-}
-
- {
-  margin: auto;
 }
 
 :root {
