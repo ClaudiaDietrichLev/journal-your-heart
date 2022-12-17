@@ -112,11 +112,14 @@ export default {
           const prompt = {
             sessionTitle: userSession.title,
             prompt: selectedPrompt.prompt,
+            answered: false,
           };
+
           session.prompts.push(prompt);
         });
       }
       this.$store.commit("saveSession", session);
+      this.$router.push({ name: "startsession" });
     },
   },
 };
