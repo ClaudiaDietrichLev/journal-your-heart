@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import SessionPrompts from "../views/SessionPrompts.vue";
+import StartSession from "../views/StartSession.vue";
+import Prompts from "../views/Prompts.vue";
 
 const routes = [
   {
@@ -12,6 +14,16 @@ const routes = [
     path: "/prompts/",
     name: "sessionprompts",
     component: SessionPrompts,
+  },
+  {
+    path: "/session/",
+    name: "startsession",
+    component: StartSession,
+  },
+  {
+    path: "/session-prompt/",
+    name: "prompts",
+    component: Prompts,
   },
   {
     path: "/about",
